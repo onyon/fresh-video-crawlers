@@ -1,0 +1,23 @@
+{
+  "name": "disneyplus",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "shows-peacocktv": "node shows-peacocktv.js",
+    "shows-disneyplus": "node shows-disneyplus.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.141.0",
+    "cheerio": "^1.0.0-rc.12",
+    "jsdom": "^20.0.0",
+    "moment": "^2.29.4",
+    "mysql2": "^2.3.3",
+    "name-to-imdb": "^3.0.3",
+    "node-fetch": "^3.2.6",
+    "underscore": "^1.13.4"
+  }
+}

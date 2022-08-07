@@ -1,0 +1,33 @@
+services:
+  expressvpn:
+    container_name: expressvpn
+    image: polkaned/expressvpn
+    environment:
+      - ACTIVATION_CODE=EUD5GKVFNDTQXTBEAWXTFKN
+      - SERVER=${CRAWLER_EXPRESSVPN_GEO}
+    cap_add:
+      - NET_ADMIN
+    devices: 
+      - /dev/net/tun
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+    privileged: true
+    restart: unless-stopped
+
+  crawler:
+    build: crawler/
+    container_name: crawler
+    environment:
+      - CRAWLER_GEO=${CRAWLER_GEO}
+      - CRAWLER_NAME=${CRAWLER_NAME}
+      - AWS_ACCESS_KEY_ID=${LOCAL_AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${LOCAL_AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${LOCAL_AWS_SESSION_TOKEN}
+      - AWS_REGION=us-east-2
+    network_mode: service:expressvpn
+    depends_on:
+      - expressvpn
+    command: '/srv/init.sh'
+    volumes:
+      - ./crawler:/srv
