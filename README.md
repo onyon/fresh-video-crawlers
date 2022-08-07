@@ -3,18 +3,26 @@
 Crawlers to iterate over content in services.
 
 ```bash
-./crawl.sh -g us
+./crawl.sh -g US -c shows-disneyplus
 ```
+### Services
+- movies-disneyplus
+- movies-peacocktv
+- movies-paramountplus
+- shows-disneyplus
+- shows-peacocktv
+- shows-paramountplus
 
 ### Country
-A country code to connect to before crawling. This must be a valid country supported
-by ExpressVPN. If you don't want to connect to VPN before crawling, omit this field.
+- US (United States)
+- UK (United Kingdom)
+- CA (Canada)
+- SG (Singapore)
+- IN (India)
+- JP (Japan)
+- HK (Hong Kong)
+- AU (Austrlia)
+- DE (Germany)
+- MX (Mexico)
+... Check crawl.sh for full list.
 
-### Mediums
-- movies
-- shows
-
-### Services
-- disneyplus
-- peacocktv
-- paramountplus
