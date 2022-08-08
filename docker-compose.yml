@@ -20,11 +20,12 @@ services:
     container_name: crawler
     environment:
       - CRAWLER_GEO=${CRAWLER_GEO}
-      - CRAWLER_NAME=${CRAWLER_NAME}
+      - CRAWLER_PROVIDER=${CRAWLER_PROVIDER}
+      - CRAWLER_MEDIUM=${CRAWLER_MEDIUM}
       - AWS_ACCESS_KEY_ID=${LOCAL_AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${LOCAL_AWS_SECRET_ACCESS_KEY}
       - AWS_SESSION_TOKEN=${LOCAL_AWS_SESSION_TOKEN}
-      - AWS_REGION=us-east-2
+      - AWS_REGION=us-east-1
     network_mode: service:expressvpn
     depends_on:
       - expressvpn

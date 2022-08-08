@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "shows-peacocktv": "node shows-peacocktv.js",
-    "shows-disneyplus": "node shows-disneyplus.js"
+    "crawler": "node crawler.js"
   },
   "author": "",
   "license": "ISC",

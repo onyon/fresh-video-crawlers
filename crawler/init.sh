@@ -3,6 +3,17 @@
 
 set -e
 
+SSM_PREFIX="/fresh-video/master/infra/rds"
+CURRENT_COUNTRY=""
+
+check_country() {
+
+  RESP=`curl -s "https://api.myip.com/"`
+  echo "Current Geo Meta: ${RESP}"
+  CURRENT_COUNTRY=`echo ${RESP} | jq -r '.cc'`
+
+}
+
 # Validate a geo aws passed in
 if [ -z "$CRAWLER_GEO" ]
 then
@@ -12,20 +23,21 @@ fi
 
 echo "Waiting for VPN connection to ${CRAWLER_GEO}"
 
-until [ `curl -s "https://api.myip.com/" | jq -r '.cc'` = "$CRAWLER_GEO" ]; do
+until [ "${CURRENT_COUNTRY}" = "$CRAWLER_GEO" ]; do
   echo "Waiting for country connection."
-  sleep 1
+  sleep 3
+  check_country
 done
 
 echo "VPN connection detected."
 
 echo "Grabbing Variables from Parameter Store"
-export RDS_HOST=$(aws ssm get-parameter --name /torrent-ninja/master/infra/rds/host | jq -r '.Parameter.Value')
-export RDS_USER=$(aws ssm get-parameter --name /torrent-ninja/master/infra/rds/user | jq -r '.Parameter.Value')
-export RDS_PASS=$(aws ssm get-parameter --with-decryption --name /torrent-ninja/master/infra/rds/pass | jq -r '.Parameter.Value')
-export RDS_DB="torrent_ninja"
+export RDS_HOST=$(aws ssm get-parameter --name ${SSM_PREFIX}/host | jq -r '.Parameter.Value')
+export RDS_USER=$(aws ssm get-parameter --name ${SSM_PREFIX}/user | jq -r '.Parameter.Value')
+export RDS_PASS=$(aws ssm get-parameter --with-decryption --name ${SSM_PREFIX}/pass | jq -r '.Parameter.Value')
+export RDS_DB=$(aws ssm get-parameter --name ${SSM_PREFIX}/db | jq -r '.Parameter.Value')
 
 source ~/.bashrc
 
 npm install
-npm run ${CRAWLER_NAME}
+npm run crawler

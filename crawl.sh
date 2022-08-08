@@ -1,11 +1,18 @@
 #!/bin/bash
 
 # Map Inputs
-while getopts g:c: flag
+while getopts g:p:m: flag
 do
   case "${flag}" in
-    g) GEO=${OPTARG};;
-    c) CRAWLER_NAME=${OPTARG}
+    g) 
+      export CRAWLER_GEO=${OPTARG}
+      ;;
+    p) 
+      export CRAWLER_PROVIDER=${OPTARG}
+      ;;
+    m)
+      export CRAWLER_MEDIUM=${OPTARG}
+      ;;
   esac
 done
 
@@ -487,7 +494,7 @@ get_express_vpn_code() {
 }
 
 # Setup Geo
-get_express_vpn_code "$GEO"
+get_express_vpn_code "$CRAWLER_GEO"
 
 echo "Running from country ${CRAWLER_GEO_LONG} (${CRAWLER_GEO})"
 
@@ -504,7 +511,5 @@ fi
 export LOCAL_AWS_ACCESS_KEY_ID=`echo ${CREDENTIALS} | jq -r '.Credentials.AccessKeyId'`
 export LOCAL_AWS_SECRET_ACCESS_KEY=`echo ${CREDENTIALS} | jq -r '.Credentials.SecretAccessKey'`
 export LOCAL_AWS_SESSION_TOKEN=`echo ${CREDENTIALS} | jq -r '.Credentials.SessionToken'`
-
-export CRAWLER_NAME=$CRAWLER_NAME
 
 docker-compose up --abort-on-container-exit

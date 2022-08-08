@@ -48,181 +48,191 @@ let findContent = async function() {
 
   console.log("Scanning URL: %s", url);
 
-  let resp = await fetch(url, {
-    "method": "GET",
-    headers: conf.headers,
-  });
+  let resp;
 
-  let data = await resp.json();
+  try {
 
-  for (const e of data.data.rail.items) {
-
-    // Fetch the Show JSON
-    const params = new URLSearchParams({
-      slug: e.slug,
-      represent: "(items(items),recs[take=8],collections(items(items[take=8])),trailers)"
-    });
-
-    let seriesReq = {};
-
-    seriesReq.fetch = await fetch(`https://atom.peacocktv.com/adapter-calypso/v3/query/node?${params}`, {
+    resp = await fetch(url, {
       "method": "GET",
       headers: conf.headers,
     });
 
-    seriesReq.data = await seriesReq.fetch.json();
+    let data = await resp.json();
 
-    const seriesMeta = seriesReq.data.attributes;
-    const firstEp    = seriesReq.data.relationships.items.data[0].relationships.items.data[0];
+    for (const e of data.data.rail.items) {
 
-    // Setup Series Meta
-    let series = {
-      Title: seriesMeta.title,
-      Description: seriesMeta.synopsisLong,
-      Link: `https://www.peacocktv.com/watch/asset${seriesMeta.slug}`,
-      Year: firstEp.attributes.year,
-      ReleaseDate: `${firstEp.attributes.year}-01-01`,
-      Medium: "tvSeries"
-    }
-    series.Slug = `${series.Year}-${series.Title}`.trim().toLowerCase().replaceAll(' ', '-').replaceAll('--','-').replace(/[^a-z0-9-]/gi, '');
+      // Fetch the Show JSON
+      const params = new URLSearchParams({
+        slug: e.slug,
+        represent: "(items(items),recs[take=8],collections(items(items[take=8])),trailers)"
+      });
 
-    console.log(`--- SERIES ---`);
-    console.log(`Title: ${series.Title}`);
-    console.log(`Year: ${series.Year}`);
+      let seriesReq = {};
 
-    // Check to see if content already exists in database.
-    let SeriesID;
-    let [rows, fields] = await connection.execute("SELECT * FROM Media WHERE Slug = ? LIMIT 1", [ series.Slug ]);
-
-    // Exists, nothing to do.
-    if(rows.length > 0) {
-
-      SeriesID = rows[0].Id;
-      console.log("Series Already Exists, ID %d", SeriesID);
-
-    // Does not exist, download media & add series to database
-    } else {
-
-      let seriesArt = seriesMeta.images.filter(image => image.type == "titleArt169");
-      if(seriesArt.length < 1) {
-        throw("Unable to find title art key titleArt169.", seriesMeta.images);
-      }
-
-      series.Image = `media/tv/${series.Slug}.jpg`;
-
-      // Retrieve Image
-      let Media = {}
-      Media.req = await fetch(seriesArt[0].url, {
-        method: 'get',
+      seriesReq.fetch = await fetch(`https://atom.peacocktv.com/adapter-calypso/v3/query/node?${params}`, {
+        "method": "GET",
         headers: conf.headers,
       });
-      Media.reqBinary = await Media.req.arrayBuffer();
 
-      // Load Image to S3
-      const putMedia = new s3.PutObjectCommand({ 
-        Acl: "public-read",
-        Bucket: conf.s3Bucket,
-        Body: Media.reqBinary,
-        CacheControl: "public, max-age=86400",
-        ContentType: "image/jpeg",
-        Key: series.Image,
-        StorageClass: "STANDARD"
-      });
-      await s3client.send(putMedia);
+      seriesReq.data = await seriesReq.fetch.json();
 
-      // Add to Database
-      let q = connection.format("INSERT INTO Media SET ?", [ series ]);
-      [rows, fields] = await connection.execute(q);
+      const seriesMeta = seriesReq.data.attributes;
+      const firstEp    = seriesReq.data.relationships.items.data[0].relationships.items.data[0];
 
-      SeriesID = rows.insertId;
+      // Setup Series Meta
+      let series = {
+        Title: seriesMeta.title,
+        Description: seriesMeta.synopsisLong,
+        Link: `https://www.peacocktv.com/watch/asset${seriesMeta.slug}`,
+        Year: firstEp.attributes.year,
+        ReleaseDate: `${firstEp.attributes.year}-01-01`,
+        Medium: "tvSeries"
+      }
+      series.Slug = `${series.Year}-${series.Title}`.trim().toLowerCase().replaceAll(' ', '-').replaceAll('--','-').replace(/[^a-z0-9-]/gi, '');
 
-      let query = "INSERT IGNORE INTO ProviderRelationship (`Provider`,`Media`,`Country`,`Link`) VALUES (?,?,?,?)";
-      await connection.execute(query, [ ProviderID, SeriesID, CountryCode, series.Link ]);
+      console.log(`--- SERIES ---`);
+      console.log(`Title: ${series.Title}`);
+      console.log(`Year: ${series.Year}`);
 
-      console.log(" - Series Added to Database");
+      // Check to see if content already exists in database.
+      let SeriesID;
+      let [rows, fields] = await connection.execute("SELECT * FROM Media WHERE Slug = ? LIMIT 1", [ series.Slug ]);
 
-    }
+      // Exists, nothing to do.
+      if(rows.length > 0) {
 
-    for (const ep of seriesReq.data.relationships.items.data[0].relationships.items.data) {
+        SeriesID = rows[0].Id;
+        console.log("Series Already Exists, ID %d", SeriesID);
 
-      let episode;
+      // Does not exist, download media & add series to database
+      } else {
 
-      try {
-
-        episode = {
-          Title: _.has(ep.attributes, "title") ? ep.attributes.title : ep.attributes.titleLong,
-          Description: ep.attributes.synopsisLong,
-          Link: `https://www.peacocktv.com/watch/asset${ep.attributes.slug}`,
-          Year: ep.attributes.year,
-          ReleaseDate: `${ep.attributes.year}-01-01`,
-          Season: ep.attributes.seasonNumber,
-          Episode: ep.attributes.episodeNumber,
-          Parent: SeriesID,
-          Medium: "tvEpisode",
+        let seriesArt = seriesMeta.images.filter(image => image.type == "titleArt169");
+        if(seriesArt.length < 1) {
+          throw("Unable to find title art key titleArt169.", seriesMeta.images);
         }
 
-        episode.Slug = `${episode.Year}-${episode.Title}`.trim().toLowerCase().replaceAll(' ', '-').replaceAll('--','-').replace(/[^a-z0-9-]/gi, ''),
+        series.Image = `media/tv/${series.Slug}.jpg`;
 
-        console.log(`Episode Title: ${episode.Title}, Season: ${episode.Season}, Episode: ${episode.Episode}, Parent: ${episode.Parent}`);
-
-        let [rows, fields] = await connection.execute("SELECT * FROM Media WHERE Season = ? AND Episode = ? AND Parent = ? AND Slug = ? LIMIT 1", [ episode.Season, episode.Episode, episode.Parent, episode.Slug ]);
-        if(rows.length > 0) {
-      
-          console.log(" - Exists");
-          continue;
-      
-        }
-
-        const fmtd = {
-          season:  episode.Season.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }),
-          episode: episode.Episode.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }),
-        };
-
-        episode.Image = `media/tv/${series.Slug}/s${fmtd.season}e${fmtd.episode}-${episode.Slug}.jpg`;
-
-        let episodeArt = ep.attributes.images.filter(image => image.type == "landscape");
-        if(episodeArt.length < 1) {
-          throw("Unable to find title art key landscape.", ep.attributes.images);
-        }
-
-        let episodeMedia = {}
-        episodeMedia.req = await fetch(episodeArt[0].url, {
+        // Retrieve Image
+        let Media = {}
+        Media.req = await fetch(seriesArt[0].url, {
           method: 'get',
           headers: conf.headers,
         });
-        episodeMedia.reqBinary = await episodeMedia.req.arrayBuffer();
+        Media.reqBinary = await Media.req.arrayBuffer();
 
-        // Send media to S3
-        const putSeriesMedia = new s3.PutObjectCommand({ 
+        // Load Image to S3
+        const putMedia = new s3.PutObjectCommand({ 
           Acl: "public-read",
           Bucket: conf.s3Bucket,
-          Body: episodeMedia.reqBinary,
+          Body: Media.reqBinary,
           CacheControl: "public, max-age=86400",
           ContentType: "image/jpeg",
-          Key: episode.Image,
+          Key: series.Image,
           StorageClass: "STANDARD"
         });
-        await s3client.send(putSeriesMedia);
+        await s3client.send(putMedia);
 
-        let q = connection.format("INSERT INTO Media SET ?", [ episode ]);
+        // Add to Database
+        let q = connection.format("INSERT INTO Media SET ?", [ series ]);
         [rows, fields] = await connection.execute(q);
 
-        const EpisodeID = rows.insertId;
+        SeriesID = rows.insertId;
 
         let query = "INSERT IGNORE INTO ProviderRelationship (`Provider`,`Media`,`Country`,`Link`) VALUES (?,?,?,?)";
-        await connection.execute(query, [ ProviderID, EpisodeID, CountryCode, episode.Link ]);
+        await connection.execute(query, [ ProviderID, SeriesID, CountryCode, series.Link ]);
 
-        console.log(`- Episode added to database. ID ${EpisodeID}`);
-      
-      } catch(e) {
+        console.log(" - Series Added to Database");
 
-        console.log(" - Error Processing Episode", e, episode, ep);
+      }
 
-        process.exit();
+      for (const ep of seriesReq.data.relationships.items.data[0].relationships.items.data) {
+
+        let episode;
+
+        try {
+
+          episode = {
+            Title: _.has(ep.attributes, "title") ? ep.attributes.title : ep.attributes.titleLong,
+            Description: ep.attributes.synopsisLong,
+            Link: `https://www.peacocktv.com/watch/asset${ep.attributes.slug}`,
+            Year: ep.attributes.year,
+            ReleaseDate: `${ep.attributes.year}-01-01`,
+            Season: ep.attributes.seasonNumber,
+            Episode: ep.attributes.episodeNumber,
+            Parent: SeriesID,
+            Medium: "tvEpisode",
+          }
+
+          episode.Slug = `${episode.Year}-${episode.Title}`.trim().toLowerCase().replaceAll(' ', '-').replaceAll('--','-').replace(/[^a-z0-9-]/gi, ''),
+
+          console.log(`Episode Title: ${episode.Title}, Season: ${episode.Season}, Episode: ${episode.Episode}, Parent: ${episode.Parent}`);
+
+          let [rows, fields] = await connection.execute("SELECT * FROM Media WHERE Season = ? AND Episode = ? AND Parent = ? AND Slug = ? LIMIT 1", [ episode.Season, episode.Episode, episode.Parent, episode.Slug ]);
+          if(rows.length > 0) {
+        
+            console.log(" - Exists");
+            continue;
+        
+          }
+
+          const fmtd = {
+            season:  episode.Season.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }),
+            episode: episode.Episode.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }),
+          };
+
+          episode.Image = `media/tv/${series.Slug}/s${fmtd.season}e${fmtd.episode}-${episode.Slug}.jpg`;
+
+          let episodeArt = ep.attributes.images.filter(image => image.type == "landscape");
+          if(episodeArt.length < 1) {
+            throw("Unable to find title art key landscape.", ep.attributes.images);
+          }
+
+          let episodeMedia = {}
+          episodeMedia.req = await fetch(episodeArt[0].url, {
+            method: 'get',
+            headers: conf.headers,
+          });
+          episodeMedia.reqBinary = await episodeMedia.req.arrayBuffer();
+
+          // Send media to S3
+          const putSeriesMedia = new s3.PutObjectCommand({ 
+            Acl: "public-read",
+            Bucket: conf.s3Bucket,
+            Body: episodeMedia.reqBinary,
+            CacheControl: "public, max-age=86400",
+            ContentType: "image/jpeg",
+            Key: episode.Image,
+            StorageClass: "STANDARD"
+          });
+          await s3client.send(putSeriesMedia);
+
+          let q = connection.format("INSERT INTO Media SET ?", [ episode ]);
+          [rows, fields] = await connection.execute(q);
+
+          const EpisodeID = rows.insertId;
+
+          let query = "INSERT IGNORE INTO ProviderRelationship (`Provider`,`Media`,`Country`,`Link`) VALUES (?,?,?,?)";
+          await connection.execute(query, [ ProviderID, EpisodeID, CountryCode, episode.Link ]);
+
+          console.log(`- Episode added to database. ID ${EpisodeID}`);
+        
+        } catch(e) {
+
+          console.log(" - Error Processing Episode", e, episode, ep);
+
+          process.exit();
+
+        }
 
       }
 
     }
+
+  } catch(e) {
+
+    console.log("Error", e, resp);
 
   }
 
