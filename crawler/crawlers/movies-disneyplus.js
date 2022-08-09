@@ -52,7 +52,11 @@ export default class DisneyPlus extends Crawler {
           }
         }
 
-        await this.addMovie(movie);
+        try {
+          await this.addMovie(movie);
+        } catch(err) {
+          console.log("Error Processing Movie", err);
+        }
 
       }
 
