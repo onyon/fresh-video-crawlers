@@ -38,7 +38,7 @@ export default class DisneyPlus extends Crawler {
         let show = {
           Title: e.text.title.full.series.default.content,
           Year: e.releases[0].releaseYear,
-          ReleaseDate: e.releases[0].releaseDate,
+          ReleaseDate: !_.isNull(e.releases[0].releaseDate) ? e.releases[0].releaseDate : `${e.releases[0].releaseYear}-01-01`,
           Link: `https://www.disneyplus.com/series/${e.text.title.slug.series.default.content}/${e.encodedSeriesId}`,
         };
 
