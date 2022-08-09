@@ -63,11 +63,16 @@ if (rows.length < 1) {
 }
 
 import CrawlerShowsDisneyPlus from "./crawlers/shows-disneyplus.js";
+import CrawlerShowsPeacockTV from './crawlers/shows-peacocktv.js';
 
 switch(app.config.Crawler) {
   case "shows-disneyplus.js":
     console.log("DISNEYPLUS");
-    const crawler = await new CrawlerShowsDisneyPlus(app).crawl();
+    await new CrawlerShowsDisneyPlus(app).crawl();
+    break;
+  case "shows-peacocktv.js":
+    console.log("PEACOCKTV")
+    await new CrawlerShowsPeacockTV(app).crawl();
     break;
 }
 
