@@ -34,7 +34,57 @@ export default class Crawler {
   }
 
   // Add an item to Media table
-  async addMovie() {
+  async addMovie(input) {
+
+    let res;
+    let fields;
+
+    // Validate Input
+    const schema = Joi.object({
+      Title: Joi.string().min(1).max(255).required(),
+      Description: Joi.any().required(),
+      Year: Joi.number().integer().min(1900).max(2024).required(),
+      ReleaseDate: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
+      Link: Joi.string().uri({ scheme: ["http","https"]}).required(),
+      RetrieveImage: Joi.any().required(),
+      Slug: Joi.string().default(this.createSlug(`${input.Year}-${input.Title}`)),
+      Medium: Joi.string().default("movie"),
+      Image: Joi.string().default(`media/movies/${this.createSlug(`${input.Year}-${input.Title}`)}.jpg`),
+    });
+
+    const movie = await schema.validateAsync(input);
+
+    console.info("-- Processing Movie --\nTitle: %s\nYear: %s", movie.Title, movie.Year);
+
+    // Check to see if movie exists
+    [ res, fields ] = await this.app.db.query(this.app.db.format("SELECT * FROM Media WHERE Medium = ? AND Slug = ? LIMIT 1", [ movie.Medium, movie.Slug ]));
+    if(res.length > 0) {
+
+      movie.Id = res[0].Id;
+
+      console.info("Movie Exists, ID: %s", movie.Id);
+
+      await this.touch(movie);
+      return movie;
+
+    }
+
+    // Check to see if the Description is a function.
+    if(_.isFunction(movie.Description)) {
+      movie.Description = await movie.Description(this);
+    }
+
+    // Download Image to S3
+    await this.saveToS3(await movie.RetrieveImage(this), movie.Image);
+
+    // Save to Database
+    [ res, fields ] = await this.app.db.query(this.app.db.format("INSERT INTO Media SET ?", [ _.pick(movie, "Slug", "Title", "Description", "Year", "ReleaseDate", "Medium", "Image") ]));
+    movie.Id = res.insertId;
+
+    console.info("Movie Created, ID: %s", movie.Id);
+
+    await this.touch(movie);
+    return movie;
 
   }
 

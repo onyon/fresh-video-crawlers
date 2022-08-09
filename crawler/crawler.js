@@ -62,23 +62,30 @@ if (rows.length < 1) {
 
 }
 
-import CrawlerShowsDisneyPlus from "./crawlers/shows-disneyplus.js";
+import CrawlerMoviesDisneyPlus    from "./crawlers/movies-disneyplus.js";
+import CrawlerShowsDisneyPlus     from "./crawlers/shows-disneyplus.js";
+
 import CrawlerShowsPeacockTV from './crawlers/shows-peacocktv.js';
-import CrawlerShowsParamountPlus from './crawlers/shows-paramountplus.js';
+
+import CrawlerMoviesParamountPlus from './crawlers/movies-paramountplus.js';
+import CrawlerShowsParamountPlus  from './crawlers/shows-paramountplus.js';
 
 switch(app.config.Crawler) {
+  case "movies-disneyplus.js":
+    await new CrawlerMoviesDisneyPlus(app).crawl();
+    break;
   case "shows-disneyplus.js":
-    console.log("DISNEYPLUS");
     await new CrawlerShowsDisneyPlus(app).crawl();
     break;
   case "shows-peacocktv.js":
-    console.log("PEACOCKTV")
     await new CrawlerShowsPeacockTV(app).crawl();
     break;
   case "shows-paramountplus.js":
-    console.log("PARAMOUNTPLUS")
     await new CrawlerShowsParamountPlus(app).crawl();
     break;
+    case "movies-paramountplus.js":
+      await new CrawlerMoviesParamountPlus(app).crawl();
+      break;
 }
 
 console.info("Crawl Complete, exiting.");
