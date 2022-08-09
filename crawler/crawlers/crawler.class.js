@@ -105,7 +105,7 @@ export default class Crawler {
       Title: Joi.string().min(1).max(255).required(),
       Description: Joi.any().required(),
       Year: Joi.number().integer().min(1900).max(2024).required(),
-      ReleaseDate: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required().default(`${input.Year}-01-01`),
+      ReleaseDate: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
       Link: Joi.string().uri({ scheme: ["http","https"]}).required(),
       RetrieveImage: Joi.any().required(),
       Slug: Joi.string().default(this.createSlug(`s${input.Season}e${input.Episode}-${input.Title}`)),
