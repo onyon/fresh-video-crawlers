@@ -1,6 +1,5 @@
 import Crawler from "./crawler.class.js";
 
-import cheerio  from "cheerio";
 import _        from "underscore";
 
 export default class PeacockTV extends Crawler {
