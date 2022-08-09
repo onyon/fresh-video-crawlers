@@ -87,7 +87,8 @@ export default class ParamountPlus extends Crawler {
             },
             RetrieveImage: async function(self) {
 
-              return self.getBuffer(ep.thumb.large);
+              const img = !_.isNull(ep.thumb.large) ? ep.thumb.large : ep.thumbUrl;
+              return self.getBuffer(img);
 
             }
           }
