@@ -19,6 +19,8 @@ done
 # Map Country input to ExpressVPN Alias
 get_express_vpn_code() {
 
+  export VPN="ON"
+
   local cc=$1 # Set 2 letter country code
   case $cc in
 
@@ -483,6 +485,13 @@ get_express_vpn_code() {
       export CRAWLER_GEO_LONG="Algeria"
       export CRAWLER_EXPRESSVPN_GEO="dz"
       ;;
+    
+    OFF)
+      export VPN="OFF"
+      export CRAWLER_GEO="US"
+      export CRAWLER_GEO_LONG="United States"
+      export CRAWLER_EXPRESSVPN_GEO="usla1"
+      ;;
 
     *)
       echo "Unsupported Geo"
@@ -519,4 +528,8 @@ export LOCAL_AWS_ACCESS_KEY_ID=`echo ${CREDENTIALS} | jq -r '.Credentials.Access
 export LOCAL_AWS_SECRET_ACCESS_KEY=`echo ${CREDENTIALS} | jq -r '.Credentials.SecretAccessKey'`
 export LOCAL_AWS_SESSION_TOKEN=`echo ${CREDENTIALS} | jq -r '.Credentials.SessionToken'`
 
-docker-compose up --abort-on-container-exit
+if [ "$VPN" = "OFF" ]; then
+  docker-compose -f docker-compose-no-vpn.yml up --abort-on-container-exit
+else
+  docker-compose up --abort-on-container-exit
+fi

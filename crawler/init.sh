@@ -21,15 +21,19 @@ then
   exit 1
 fi
 
-echo "Waiting for VPN connection to ${CRAWLER_GEO}"
+if [ "$VPN" = "ON" ]; then
 
-until [ "${CURRENT_COUNTRY}" = "$CRAWLER_GEO" ]; do
-  echo "Waiting for country connection."
-  sleep 3
-  check_country
-done
+  echo "Waiting for VPN connection to ${CRAWLER_GEO}"
 
-echo "VPN connection detected."
+  until [ "${CURRENT_COUNTRY}" = "$CRAWLER_GEO" ]; do
+    echo "Waiting for country connection."
+    sleep 5
+    check_country
+  done
+
+  echo "VPN connection detected."
+
+fi
 
 echo "Grabbing Variables from Parameter Store"
 export RDS_HOST=$(aws ssm get-parameter --name ${SSM_PREFIX}/host | jq -r '.Parameter.Value')
