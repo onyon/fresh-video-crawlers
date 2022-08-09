@@ -493,6 +493,13 @@ get_express_vpn_code() {
 
 }
 
+# Check if Crawler exists
+CRAWLER_FILE="./crawler/crawlers/${CRAWLER_MEDIUM}-${CRAWLER_PROVIDER}.js"
+if [ ! -f "${CRAWLER_FILE}" ]; then
+  echo "Crawler file ${CRAWLER_FILE} does not exist."
+  exit 1
+fi
+
 # Setup Geo
 get_express_vpn_code "$CRAWLER_GEO"
 

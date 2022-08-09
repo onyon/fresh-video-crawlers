@@ -12,6 +12,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.141.0",
     "cheerio": "^1.0.0-rc.12",
+    "joi": "^17.6.0",
     "jsdom": "^20.0.0",
     "moment": "^2.29.4",
     "mysql2": "^2.3.3",

@@ -1,10 +1,10 @@
 'use strict';
 
-console.log(process.env);
-
 // We are going to attach all the functionality to app
 // and pass it into the individual crawlers on execution.
 import config from "./config.js";
+import fs from "fs";
+
 let app = {
   config: config()
 };
@@ -15,9 +15,15 @@ if(app.config.Country.Code.length !== 2) {
   process.exit(1);
 }
 
-// Validate Provider Exists
+// Validate Provider Input Exists
 if(!_.has(app.config.Provider, process.env.CRAWLER_PROVIDER)) {
   console.error("Provider %s not found.", process.env.CRAWLER_PROVIDER);
+  process.exit(1);
+}
+
+// Validate Crawler Exists, done in init script but for safety sake.
+if(!fs.existsSync(app.config.CrawlScript)) {
+  console.error("Crawl Script %s not found.", app.config.CrawlScript);
   process.exit(1);
 }
 
@@ -54,6 +60,15 @@ if (rows.length < 1) {
   app.Provider.Id = rows[0].Id;
   console.info("Provider found, ID %s.", app.Provider.Id);
 
+}
+
+import CrawlerShowsDisneyPlus from "./crawlers/shows-disneyplus.js";
+
+switch(app.config.Crawler) {
+  case "shows-disneyplus.js":
+    console.log("DISNEYPLUS");
+    const crawler = await new CrawlerShowsDisneyPlus(app).crawl();
+    break;
 }
 
 console.info("Crawl Complete, exiting.");

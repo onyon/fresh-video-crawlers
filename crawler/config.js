@@ -68,7 +68,9 @@ export default function cfg() {
       }
     },
     Browser: {
-      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36"
+      Headers: {
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36"
+      }
     },
     Country: {
       Code: process.env.CRAWLER_GEO,
@@ -78,6 +80,14 @@ export default function cfg() {
       user: process.env.RDS_USER,
       password: process.env.RDS_PASS,
       database: process.env.RDS_DB,
+    },
+    CrawlScript: `./crawlers/${process.env.CRAWLER_MEDIUM}-${process.env.CRAWLER_PROVIDER}.js`,
+    Crawler: `${process.env.CRAWLER_MEDIUM}-${process.env.CRAWLER_PROVIDER}.js`,
+    S3: {
+      Bucket: "fresh-video-assets",
+      Acl: "public-read",
+      CacheControl: "public, max-age=2592000",
+      StorageClass: "STANDARD"
     }
   });
 }
