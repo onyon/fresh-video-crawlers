@@ -37,21 +37,29 @@ export default class PeacockTV extends Crawler {
 
     for(const e of index.relationships.items.data) {
 
-      let movie = {
-        Title: e.attributes.title,
-        Description: e.attributes.synopsisLong,
-        Link: `https://www.peacocktv.com/watch/asset${e.attributes.slug}`,
-        Year: e.attributes.year,
-        ReleaseDate: `${e.attributes.year}-01-01`, // TODO: Fix Release Date
-        RetrieveImage: async function(self) {
+      try {
 
-          let res = e.attributes.images.filter(image => image.type == "titleArt34");
-          return await self.getBuffer(res[0].url);
+        let movie = {
+          Title: e.attributes.title,
+          Description: e.attributes.synopsisLong,
+          Link: `https://www.peacocktv.com/watch/asset${e.attributes.slug}`,
+          Year: e.attributes.year,
+          ReleaseDate: `${e.attributes.year}-01-01`, // TODO: Fix Release Date
+          RetrieveImage: async function(self) {
 
+            let res = e.attributes.images.filter(image => image.type == "titleArt34");
+            return await self.getBuffer(res[0].url);
+
+          }
         }
-      }
 
-      await this.addMovie(movie);
+        await this.addMovie(movie);
+
+      } catch(err) {
+
+        console.error("Error Adding Movie", err);
+
+      }
 
     }
 
