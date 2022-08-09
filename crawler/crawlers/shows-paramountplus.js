@@ -53,15 +53,23 @@ export default class ParamountPlus extends Crawler {
         Year:         $('.showBadging div div:nth-child(2)').text().trim(),
         ReleaseDate:  `${$('.showBadging div div:nth-child(2)').text().trim()}-01-01`,
         Link:         `${this.app.Provider.Link}${e.href}`,
+        RetrieveImage: async function(self) {
+
+          return await self.getBuffer(e.thumb);
+  
+        }
       }
 
-      show.RetrieveImage = async function(self) {
+      try {
 
-        return await self.getBuffer(e.thumb);
+        show = await this.addShow(show);
+
+      } catch(err) {
+
+        console.error("Error Adding Show", err);
+        continue;
 
       }
-
-      show = await this.addShow(show);
 
       // Iterate over seasons
       for (const season of $('#season_filterDD li').map((i, x) => $(x).attr("aria-label")).toArray()) {
