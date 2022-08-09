@@ -23,7 +23,7 @@ export default class Crawler {
       return this.Media[Id]
     }
 
-    let [ res, fields ] = await this.app.db.execute(this.app.db.format("SELECT * FROM Media WHERE Id = ? LIMIT 1", [ Id ]));
+    let [ res, fields ] = await this.app.db.query(this.app.db.format("SELECT * FROM Media WHERE Id = ? LIMIT 1", [ Id ]));
     if(res.length !== 1) {
       throw(`Invalid Media ID ${Id}`);
     }
@@ -61,7 +61,7 @@ export default class Crawler {
     console.info("-- Processing Show --\nTitle: %s\nYear: %s", show.Title, show.Year);
 
     // Check to see if show exists
-    [ res, fields ] = await this.app.db.execute(this.app.db.format("SELECT * FROM Media WHERE Medium = ? AND Slug = ? LIMIT 1", [ show.Medium, show.Slug ]));
+    [ res, fields ] = await this.app.db.query(this.app.db.format("SELECT * FROM Media WHERE Medium = ? AND Slug = ? LIMIT 1", [ show.Medium, show.Slug ]));
     if(res.length > 0) {
 
       show.Id = res[0].Id;
@@ -82,7 +82,7 @@ export default class Crawler {
     await this.saveToS3(await show.RetrieveImage(this), show.Image);
 
     // Save to Database
-    [ res, fields ] = await this.app.db.execute(this.app.db.format("INSERT INTO Media SET ?", [ _.pick(show, "Slug", "Title", "Description", "Year", "ReleaseDate", "Medium", "Image") ]));
+    [ res, fields ] = await this.app.db.query(this.app.db.format("INSERT INTO Media SET ?", [ _.pick(show, "Slug", "Title", "Description", "Year", "ReleaseDate", "Medium", "Image") ]));
     show.Id = res.insertId;
 
     console.info("Show Created, ID: %s", show.Id);
@@ -121,7 +121,7 @@ export default class Crawler {
     console.log("Processing Episode. [ Title: %s, Season: %s, Episode: %s ]", episode.Title, episode.Season, episode.Episode);
 
     // Check to see if episode exists
-    [ res, fields ] = await this.app.db.execute(this.app.db.format("SELECT * FROM Media WHERE Parent = ? AND Season = ? AND Episode = ? AND Medium = ? AND Slug = ? LIMIT 1", [ episode.Parent, episode.Season, episode.Episode, episode.Medium, episode.Slug ]));
+    [ res, fields ] = await this.app.db.query(this.app.db.format("SELECT * FROM Media WHERE Parent = ? AND Season = ? AND Episode = ? AND Medium = ? AND Slug = ? LIMIT 1", [ episode.Parent, episode.Season, episode.Episode, episode.Medium, episode.Slug ]));
     if(res.length > 0) {
 
       episode.Id = res[0].Id;
@@ -142,7 +142,7 @@ export default class Crawler {
     await this.saveToS3(await episode.RetrieveImage(this), episode.Image);
 
     // Save to Database
-    [ res, fields ] = await this.app.db.execute(this.app.db.format("INSERT INTO Media SET ?", [ _.pick(episode, "Slug", "Title", "Description", "Year", "ReleaseDate", "Medium", "Image", "Season", "Episode", "Parent") ]));
+    [ res, fields ] = await this.app.db.query(this.app.db.format("INSERT INTO Media SET ?", [ _.pick(episode, "Slug", "Title", "Description", "Year", "ReleaseDate", "Medium", "Image", "Season", "Episode", "Parent") ]));
     episode.Id = res.insertId;
 
     console.info("Episode Created, ID: %s", episode.Id);
@@ -162,7 +162,7 @@ export default class Crawler {
       Link: media.Link,
     }
 
-    await this.app.db.execute(this.app.db.format("INSERT INTO ProviderRelationship SET ? ON DUPLICATE KEY UPDATE Seen = NOW()", [ i ]));
+    await this.app.db.query(this.app.db.format("INSERT INTO ProviderRelationship SET ? ON DUPLICATE KEY UPDATE Seen = NOW()", [ i ]));
 
     console.info("Touched Media. [ Provider: %s, Media: %s, Country: %s, Link: %s ]", i.Provider, i.Media, i.Country, i.Link);
 
