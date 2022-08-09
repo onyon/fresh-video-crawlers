@@ -71,29 +71,37 @@ export default class ParamountPlus extends Crawler {
 
         for (const ep of seasonMeta.result.data) {
 
-          let episode = {
-            Title: ep.label,
-            Link: `${this.app.Provider.Link}${ep.url}`,
-            Year: moment(ep.airdate_iso).format('YYYY'),
-            ReleaseDate: moment(ep.airdate_iso).format("YYYY-MM-DD"),
-            Season: ep.season_number,
-            Episode: ep.episode_number,
-            Parent: show.Id,
-            Description: async function(self) {
+          try {
 
-              const $ = cheerio.load(await self.getHTML(this.Link));
-              return $("[property=og:description]").attr('content');
+            let episode = {
+              Title: ep.label,
+              Link: `${this.app.Provider.Link}${ep.url}`,
+              Year: moment(ep.airdate_iso).format('YYYY'),
+              ReleaseDate: moment(ep.airdate_iso).format("YYYY-MM-DD"),
+              Season: ep.season_number,
+              Episode: ep.episode_number,
+              Parent: show.Id,
+              Description: async function(self) {
 
-            },
-            RetrieveImage: async function(self) {
+                const $ = cheerio.load(await self.getHTML(this.Link));
+                return $("[property=og:description]").attr('content');
 
-              const img = !_.isNull(ep.thumb.large) ? ep.thumb.large : ep.thumbUrl;
-              return self.getBuffer(img);
+              },
+              RetrieveImage: async function(self) {
 
+                const img = !_.isNull(ep.thumb.large) ? ep.thumb.large : ep.thumbUrl;
+                return self.getBuffer(img);
+
+              }
             }
-          }
 
-          await this.addEpisode(episode);
+            await this.addEpisode(episode);
+
+          } catch(err) {
+
+            console.error("Error Adding Episode", err);
+
+          }
 
         }
 
