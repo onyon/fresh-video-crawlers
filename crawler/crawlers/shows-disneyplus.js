@@ -75,7 +75,12 @@ export default class DisneyPlus extends Crawler {
         }
 
         // Retrieve Series Metadata & Iterate
-        let seriesMeta = await this.getJSON(`${this.local.link.series}${e.encodedSeriesId}`);
+        let seriesMeta;
+        try {
+          seriesMeta = await this.getJSON(`${this.local.link.series}${e.encodedSeriesId}`);
+        } catch(err) {
+          console.error("Error Receiving Series Meta", err);
+        }
         for (const season of seriesMeta.data.DmcSeriesBundle.seasons.seasons) {
 
           for(let ie = 1; true; ie++) {
