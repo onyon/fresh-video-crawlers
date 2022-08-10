@@ -105,7 +105,15 @@ export default class DisneyPlus extends Crawler {
 
               }
 
-              episode = await this.addEpisode(episode);
+              try {
+
+                episode = await this.addEpisode(episode);
+
+              } catch(err) {
+
+                console.error("Error Adding Episode", err);
+
+              }
             
             }
 
