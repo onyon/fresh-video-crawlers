@@ -63,7 +63,16 @@ export default class DisneyPlus extends Crawler {
 
         }
 
-        show = await this.addShow(show);
+        try {
+
+          show = await this.addShow(show);
+        
+        } catch(err) {
+
+          console.error("Error Adding Show", err);
+          continue;
+
+        }
 
         // Retrieve Series Metadata & Iterate
         let seriesMeta = await this.getJSON(`${this.local.link.series}${e.encodedSeriesId}`);
