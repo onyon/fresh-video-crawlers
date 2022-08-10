@@ -50,6 +50,7 @@ export default class Crawler {
       Slug: Joi.string().default(this.createSlug(`${input.Year}-${input.Title}`)),
       Medium: Joi.string().default("movie"),
       Image: Joi.string().default(`media/movies/${this.createSlug(`${input.Year}-${input.Title}`)}.jpg`),
+      Rating: Joi.string().optional().default(null),
     });
 
     const movie = await schema.validateAsync(input);
@@ -104,6 +105,7 @@ export default class Crawler {
       Slug: Joi.string().default(this.createSlug(`${input.Year}-${input.Title}`)),
       Medium: Joi.string().default("tvShow"),
       Image: Joi.string().default(`media/shows/${this.createSlug(`${input.Year}-${input.Title}`)}.jpg`),
+      Rating: Joi.string().optional().default(null),
     });
 
     const show = await schema.validateAsync(input);
@@ -164,6 +166,7 @@ export default class Crawler {
       Season: Joi.number().integer().required(),
       Episode: Joi.number().integer().required(),
       Parent: Joi.number().integer().required(),
+      Rating: Joi.string().default(null),
     });
 
     const episode = await schema.validateAsync(input);
@@ -210,6 +213,7 @@ export default class Crawler {
       Media: media.Id,
       Country: this.app.config.Country.Code,
       Link: media.Link,
+      Rating: media.Rating,
     }
 
     await this.app.db.query(this.app.db.format("INSERT INTO ProviderRelationship SET ? ON DUPLICATE KEY UPDATE Seen = NOW()", [ i ]));

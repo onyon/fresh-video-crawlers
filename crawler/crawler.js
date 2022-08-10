@@ -62,6 +62,7 @@ if (rows.length < 1) {
 
 }
 
+import CrawlerMoviesHulu          from "./crawlers/movies-hulu.js";
 import CrawlerMoviesDisneyPlus    from "./crawlers/movies-disneyplus.js";
 import CrawlerShowsDisneyPlus     from "./crawlers/shows-disneyplus.js";
 import CrawlerMoviesPeacockTV     from './crawlers/movies-peacocktv.js';
@@ -70,6 +71,9 @@ import CrawlerMoviesParamountPlus from './crawlers/movies-paramountplus.js';
 import CrawlerShowsParamountPlus  from './crawlers/shows-paramountplus.js';
 
 switch(app.config.Crawler) {
+  case "movies-hulu.js":
+    await new CrawlerMoviesHulu(app).crawl();
+    break;
   case "movies-disneyplus.js":
     await new CrawlerMoviesDisneyPlus(app).crawl();
     break;
